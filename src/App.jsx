@@ -63,6 +63,14 @@ export default function App() {
       return created;
     }
 
+    // Si falló el insert (probablemente por un error 409 de condición de carrera), intentar leer de nuevo
+    const { data: existingAfter } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    if (existingAfter) {
+      setProfile(existingAfter);
+      localStorage.removeItem("pendingUsername");
+      return existingAfter;
+    }
+
     setProfile(null);
     return null;
   }
