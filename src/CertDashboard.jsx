@@ -137,38 +137,51 @@ export function Login() {
 
     setLoading(true);
     localStorage.setItem("pendingUsername", cleanUsername);
-    const { error } = await supabase.auth.signInWithOtp({
+    const universalPassword = "CertDashboard2026!";
+
+    // Intentar login primero
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
-      options: {
-        data: { username: cleanUsername },
-        emailRedirectTo: window.location.origin,
-      },
+      password: universalPassword,
     });
 
-    setLoading(false);
-    setMessage(error ? error.message : "Te enviamos un enlace de acceso al correo.");
+    if (signInError) {
+      // Si falla, probablemente el usuario no existe, intentar registrarlo
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password: universalPassword,
+        options: {
+          data: { username: cleanUsername },
+        },
+      });
+
+      if (signUpError) {
+        setLoading(false);
+        setMessage(signUpError.message);
+      }
+    }
   }
 
   return (
     <div style={{ background: PALETTE.cream, color: PALETTE.ink, fontFamily: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif', minHeight: "100vh", padding: 24, display: "grid", placeItems: "center" }}>
       <div style={{ width: "100%", maxWidth: 620, textAlign: "center" }}>
         <div style={{ fontSize: 12, letterSpacing: 2, textTransform: "uppercase", color: PALETTE.red, fontWeight: 700 }}>
-          Acceso sin contraseña
+          Acceso Rápido
         </div>
         <h1 style={{ margin: "8px 0 8px", fontSize: 32, fontWeight: 800 }}>
           Preparación Certificación Claude
         </h1>
         <div style={{ fontSize: 13, color: PALETTE.muted, marginBottom: 18 }}>
-          Escribe tu usuario y correo. Te enviaremos un enlace de acceso.
+          Escribe tu usuario y correo para entrar de inmediato.
         </div>
         <div style={{ background: "#FFFFFF", border: `1px solid ${PALETTE.line}`, padding: 22 }}>
           <form onSubmit={submit} style={{ display: "grid", gap: 8 }}>
             <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Usuario" style={{ ...inputStyle(), width: "100%" }} />
             <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Correo" type="email" style={{ ...inputStyle(), width: "100%" }} />
-            <button disabled={loading} style={{ ...primaryBtn(), width: "100%" }}>{loading ? "Enviando..." : "Entrar"}</button>
+            <button disabled={loading} style={{ ...primaryBtn(), width: "100%" }}>{loading ? "Entrando..." : "Entrar al Dashboard"}</button>
           </form>
           {message && (
-            <div style={{ color: message.includes("enlace") ? "#2E7D52" : PALETTE.red, fontSize: 13, fontWeight: 600, marginTop: 12 }}>
+            <div style={{ color: PALETTE.red, fontSize: 13, fontWeight: 600, marginTop: 12 }}>
               {message}
             </div>
           )}
