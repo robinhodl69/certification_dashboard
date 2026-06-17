@@ -147,7 +147,7 @@ export function Login() {
 
     if (signInError) {
       // Si falla, probablemente el usuario no existe, intentar registrarlo
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: cleanEmail,
         password: universalPassword,
         options: {
@@ -158,6 +158,10 @@ export function Login() {
       if (signUpError) {
         setLoading(false);
         setMessage(signUpError.message);
+      } else if (!signUpData.session) {
+        // Confirm email sigue activado
+        setLoading(false);
+        setMessage("⚠️ Falta desactivar 'Confirm email' en Supabase > Authentication > Providers > Email.");
       }
     }
   }
